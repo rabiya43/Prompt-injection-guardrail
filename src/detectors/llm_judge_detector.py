@@ -2,7 +2,7 @@ import json
 import logging
 from openai import AsyncOpenAI
 from ..schemas import DetectionVerdict
-from ..config import ANTHROPIC_API_KEY, MODEL_NAME
+from ..config import GEMINI_API_KEY, MODEL_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +24,8 @@ The JSON must exactly match this structure:
 
 class LLMJudgeDetector:
     def __init__(self, client: AsyncOpenAI = None):
-        base_url = "https://openrouter.ai/api/v1" if ANTHROPIC_API_KEY and ANTHROPIC_API_KEY.startswith("sk-or") else None
-        headers = {"HTTP-Referer": "http://localhost:5173", "X-Title": "Prompt Injection Guardrail"} if base_url else {}
-        self.client = client or AsyncOpenAI(api_key=ANTHROPIC_API_KEY, base_url=base_url, default_headers=headers)
+        base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+        self.client = client or AsyncOpenAI(api_key=GEMINI_API_KEY, base_url=base_url)
         
     async def detect(self, content: str, _retry_count=0) -> DetectionVerdict:
         try:

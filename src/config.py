@@ -6,10 +6,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # API keys
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Model settings
-MODEL_NAME = "anthropic/claude-sonnet-4.6"
+MODEL_NAME = "gemini-2.5-flash"
 
 # Detector settings
 # JUDGE_MODE can be "always" or "on_uncertain"
