@@ -1,0 +1,18 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+results/metrics.json
+results/failure_cases.md
+
+# Environment variables
+.env
+.env.local
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# OS
+.DS_Store

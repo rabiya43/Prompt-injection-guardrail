@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: guardrail-api
+    env: docker
+    dockerfilePath: ./Dockerfile.api
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://guardrail-ui.onrender.com
+    autoDeploy: false
+
+  - type: web
+    name: guardrail-ui
+    env: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    rootDir: frontend
+    envVars:
+      - key: VITE_API_URL
+        value: https://guardrail-api.onrender.com
+    autoDeploy: false
