@@ -24,11 +24,24 @@ The JSON must exactly match this structure:
 
 class LLMJudgeDetector:
     def __init__(self, client: AsyncOpenAI = None):
+        if client is not None:
+            self.client = client
+            return
+        if not ANTHROPIC_API_KEY:
+            self.client = None
+            return
         base_url = "https://openrouter.ai/api/v1" if ANTHROPIC_API_KEY and ANTHROPIC_API_KEY.startswith("sk-or") else None
         headers = {"HTTP-Referer": "http://localhost:5173", "X-Title": "Prompt Injection Guardrail"} if base_url else {}
-        self.client = client or AsyncOpenAI(api_key=ANTHROPIC_API_KEY, base_url=base_url, default_headers=headers)
+        self.client = AsyncOpenAI(api_key=ANTHROPIC_API_KEY, base_url=base_url, default_headers=headers)
         
     async def detect(self, content: str, _retry_count=0) -> DetectionVerdict:
+        if self.client is None:
+            return DetectionVerdict(
+                is_injection=False,
+                confidence=0.0,
+                reasoning="LLM judge unavailable: missing ANTHROPIC_API_KEY",
+                triggered_by="llm_judge"
+            )
         try:
             response = await self.client.chat.completions.create(
                 model=MODEL_NAME,
