@@ -3,6 +3,7 @@ import { Play, FileText, Bot, Shield, ArrowRight, ShieldAlert, ShieldCheck } fro
 import type { CheckResponse } from '../api/client';
 import { apiClient } from '../api/client';
 import { VerdictCard } from '../components/VerdictCard';
+import { TiltCard } from '../components/TiltCard';
 
 export const AgentSimulation: React.FC = () => {
   const [url, setUrl] = useState("http://example.com/safe-doc");
@@ -19,7 +20,6 @@ export const AgentSimulation: React.FC = () => {
     setStatus('fetching');
     setResult(null);
     
-    // Simulate fetching (No actual arbitrary SSRF to avoid security risks, use static mock)
     await new Promise(r => setTimeout(r, 800));
     const content = MOCK_URLS[url] || `Simulated fetched content for ${url}. This content appears harmless.`;
     
@@ -28,7 +28,6 @@ export const AgentSimulation: React.FC = () => {
       const res = await apiClient.checkContent(content);
       setResult(res);
       
-      // Delay before showing final state
       await new Promise(r => setTimeout(r, 1000));
       setStatus(res.is_injection ? 'blocked' : 'proceeding');
     } catch (e) {
@@ -38,68 +37,72 @@ export const AgentSimulation: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Agent Pipeline Simulation</h1>
-        <p className="text-slate-500 mt-2">Visualize how the guardrail intercepts adversarial content before it reaches the agent's context window.</p>
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 relative z-20">
+      <div className="text-center">
+        <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-[0_0_15px_rgba(0,255,136,0.5)]">Agent Pipeline Simulation</h1>
+        <p className="text-[#00ff88] mt-2 font-medium">Visualize how the guardrail intercepts adversarial content before it reaches the agent's context window.</p>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h3 className="font-semibold text-slate-800">1. Agent Setup</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-           <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">User Task</label>
-              <input type="text" value={task} onChange={e => setTask(e.target.value)} disabled={status !== 'idle'}
-                     className="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 disabled:opacity-50" />
-           </div>
-           <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Target URL to Fetch</label>
-              <select value={url} onChange={e => setUrl(e.target.value)} disabled={status !== 'idle'}
-                      className="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 disabled:opacity-50 bg-white">
-                 <option value="http://example.com/safe-doc">http://example.com/safe-doc (Safe)</option>
-                 <option value="http://malicious.com/payload">http://malicious.com/payload (Injected)</option>
-                 <option value="http://unknown.com/page">http://unknown.com/page (Unknown)</option>
-              </select>
-           </div>
+      <TiltCard>
+        <div className="bg-[#161930]/80 backdrop-blur-md p-6 rounded-xl border border-[#2a2e4a] shadow-xl space-y-4">
+          <h3 className="font-bold text-white mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#00ff88] shadow-[0_0_8px_#00ff88]"></span> 1. Agent Setup
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2">
+             <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">User Task</label>
+                <input type="text" value={task} onChange={e => setTask(e.target.value)} disabled={status !== 'idle'}
+                       className="w-full px-4 py-3 bg-[#0a0b14] text-[#00ff88] border border-[#2a2e4a] rounded-lg focus:ring-2 focus:ring-[#00ff88] focus:border-[#00ff88] outline-none font-mono text-sm shadow-inner transition-all disabled:opacity-50" />
+             </div>
+             <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Target URL to Fetch</label>
+                <select value={url} onChange={e => setUrl(e.target.value)} disabled={status !== 'idle'}
+                        className="w-full px-4 py-3 bg-[#0a0b14] text-[#00ff88] border border-[#2a2e4a] rounded-lg focus:ring-2 focus:ring-[#00ff88] focus:border-[#00ff88] outline-none font-mono text-sm shadow-inner transition-all disabled:opacity-50">
+                   <option value="http://example.com/safe-doc">http://example.com/safe-doc (Safe)</option>
+                   <option value="http://malicious.com/payload">http://malicious.com/payload (Injected)</option>
+                   <option value="http://unknown.com/page">http://unknown.com/page (Unknown)</option>
+                </select>
+             </div>
+          </div>
+          <button 
+             onClick={runSimulation}
+             disabled={status !== 'idle'}
+             className="w-full md:w-auto px-8 py-3 mt-4 bg-[#00ff88] hover:bg-[#00cc6a] text-[#050511] font-bold rounded-lg shadow-[0_0_15px_rgba(0,255,136,0.4)] flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:shadow-none disabled:hover:scale-100"
+          >
+             <Play className="w-5 h-5" /> Run Simulation
+          </button>
         </div>
-        <button 
-           onClick={runSimulation}
-           disabled={status !== 'idle'}
-           className="w-full md:w-auto px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg shadow flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-        >
-           <Play className="w-4 h-4" /> Run Simulation
-        </button>
-      </div>
+      </TiltCard>
 
       {/* Pipeline Visual */}
-      <div className="py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
+      <div className="py-12 px-4 flex flex-col md:flex-row items-center justify-between gap-6 max-w-3xl mx-auto">
         
         {/* Step 1: Fetch Tool */}
-        <div className={`flex flex-col items-center gap-2 transition-opacity duration-300 ${['idle'].includes(status) ? 'opacity-40' : 'opacity-100'}`}>
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center ${status === 'fetching' ? 'bg-blue-100 text-blue-600 ring-4 ring-blue-100 animate-pulse' : 'bg-slate-100 text-slate-600'}`}>
-             <FileText className="w-8 h-8" />
+        <div className={`flex flex-col items-center gap-3 transition-all duration-500 ${['idle'].includes(status) ? 'opacity-30 scale-95' : 'opacity-100 scale-100'}`}>
+          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center border ${status === 'fetching' ? 'bg-blue-900/40 border-blue-400 text-blue-400 shadow-[0_0_30px_rgba(96,165,250,0.5)] animate-pulse' : 'bg-[#161930] border-[#2a2e4a] text-slate-500'}`}>
+             <FileText className="w-10 h-10" />
           </div>
-          <span className="text-sm font-semibold text-slate-700">Fetch Tool</span>
+          <span className="text-sm font-bold text-slate-300 tracking-wider">FETCH TOOL</span>
         </div>
 
-        <ArrowRight className={`w-6 h-6 ${status === 'analyzing' || status === 'blocked' || status === 'proceeding' ? 'text-brand-500' : 'text-slate-200'}`} />
+        <ArrowRight className={`w-8 h-8 ${status === 'analyzing' || status === 'blocked' || status === 'proceeding' ? 'text-[#00ff88] drop-shadow-[0_0_10px_#00ff88]' : 'text-[#2a2e4a]'}`} />
 
         {/* Step 2: Guardrail */}
-        <div className={`flex flex-col items-center gap-2 transition-opacity duration-300 ${['idle', 'fetching'].includes(status) ? 'opacity-40' : 'opacity-100'}`}>
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center ${status === 'analyzing' ? 'bg-purple-100 text-purple-600 ring-4 ring-purple-100 animate-pulse' : 'bg-slate-100 text-slate-600'}`}>
-             <Shield className="w-8 h-8" />
+        <div className={`flex flex-col items-center gap-3 transition-all duration-500 ${['idle', 'fetching'].includes(status) ? 'opacity-30 scale-95' : 'opacity-100 scale-100'}`}>
+          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center border ${status === 'analyzing' ? 'bg-purple-900/40 border-purple-400 text-purple-400 shadow-[0_0_30px_rgba(192,132,252,0.5)] animate-pulse' : 'bg-[#161930] border-[#2a2e4a] text-slate-500'}`}>
+             <Shield className="w-10 h-10" />
           </div>
-          <span className="text-sm font-semibold text-slate-700">Guardrail</span>
+          <span className="text-sm font-bold text-slate-300 tracking-wider">GUARDRAIL</span>
         </div>
 
-        <ArrowRight className={`w-6 h-6 ${status === 'blocked' || status === 'proceeding' ? 'text-brand-500' : 'text-slate-200'}`} />
+        <ArrowRight className={`w-8 h-8 ${status === 'blocked' || status === 'proceeding' ? 'text-[#00ff88] drop-shadow-[0_0_10px_#00ff88]' : 'text-[#2a2e4a]'}`} />
 
         {/* Step 3: Agent Context */}
-        <div className={`flex flex-col items-center gap-2 transition-opacity duration-300 ${['idle', 'fetching', 'analyzing'].includes(status) ? 'opacity-40' : 'opacity-100'}`}>
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center ${status === 'blocked' ? 'bg-red-100 text-red-600' : status === 'proceeding' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-600'}`}>
-             {status === 'blocked' ? <ShieldAlert className="w-8 h-8" /> : status === 'proceeding' ? <ShieldCheck className="w-8 h-8" /> : <Bot className="w-8 h-8" />}
+        <div className={`flex flex-col items-center gap-3 transition-all duration-500 ${['idle', 'fetching', 'analyzing'].includes(status) ? 'opacity-30 scale-95' : 'opacity-100 scale-100'}`}>
+          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center border ${status === 'blocked' ? 'bg-red-900/40 border-red-500 text-red-500 shadow-[0_0_30px_rgba(239,68,68,0.5)]' : status === 'proceeding' ? 'bg-[#00ff88]/20 border-[#00ff88] text-[#00ff88] shadow-[0_0_30px_rgba(0,255,136,0.4)]' : 'bg-[#161930] border-[#2a2e4a] text-slate-500'}`}>
+             {status === 'blocked' ? <ShieldAlert className="w-10 h-10" /> : status === 'proceeding' ? <ShieldCheck className="w-10 h-10" /> : <Bot className="w-10 h-10" />}
           </div>
-          <span className="text-sm font-semibold text-slate-700">Agent Context</span>
+          <span className="text-sm font-bold text-slate-300 tracking-wider">AGENT CONTEXT</span>
         </div>
 
       </div>
@@ -107,25 +110,31 @@ export const AgentSimulation: React.FC = () => {
       {/* Result Display */}
       {status === 'blocked' && result && (
          <div className="animate-in slide-in-from-bottom-4 duration-500">
-           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r text-red-900 font-medium">
+           <div className="bg-red-950/60 border-l-4 border-red-500 p-4 mb-6 rounded-r-xl text-red-300 font-bold tracking-wide shadow-[0_0_20px_rgba(255,0,0,0.1)] backdrop-blur-md">
               Simulation Blocked: The guardrail intercepted the payload before the agent could process it.
            </div>
-           <VerdictCard result={result} />
+           <TiltCard>
+             <VerdictCard result={result} />
+           </TiltCard>
          </div>
       )}
       
       {status === 'proceeding' && result && (
          <div className="animate-in slide-in-from-bottom-4 duration-500">
-           <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4 rounded-r text-green-900 font-medium">
+           <div className="bg-[#00ff88]/10 border-l-4 border-[#00ff88] p-4 mb-6 rounded-r-xl text-[#00ff88] font-bold tracking-wide shadow-[0_0_20px_rgba(0,255,136,0.1)] backdrop-blur-md">
               Simulation Proceeding: The agent successfully ingested the retrieved content and continues executing the task.
            </div>
-           <VerdictCard result={result} />
+           <TiltCard>
+             <VerdictCard result={result} />
+           </TiltCard>
          </div>
       )}
 
       {status !== 'idle' && (
-         <div className="flex justify-center mt-8">
-            <button onClick={() => {setStatus('idle'); setResult(null);}} className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Reset Simulation</button>
+         <div className="flex justify-center mt-12 pb-8">
+            <button onClick={() => {setStatus('idle'); setResult(null);}} className="text-sm font-bold tracking-wider text-slate-400 hover:text-white uppercase transition-colors hover:drop-shadow-[0_0_5px_white]">
+               Reset Simulation
+            </button>
          </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { apiClient } from '../api/client';
 import type { CheckResponse } from '../api/client';
 import { VerdictCard } from '../components/VerdictCard';
+import { TiltCard } from '../components/TiltCard';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
 const PRESETS = [
@@ -35,60 +36,68 @@ export const LiveChecker: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Live Injection Checker</h1>
-        <p className="text-slate-500 mt-2">Test the guardrail pipeline with custom content or known adversarial payloads.</p>
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 relative z-20">
+      <div className="text-center">
+        <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-[0_0_15px_rgba(0,255,136,0.5)]">Live Injection Checker</h1>
+        <p className="text-[#00ff88] mt-2 font-medium">Test the guardrail pipeline with custom content or adversarial payloads.</p>
       </div>
 
-      <div className="grid md:grid-cols-[1fr_300px] gap-6 items-start">
-        <div className="space-y-4">
-           <textarea 
-             value={content}
-             onChange={(e) => setContent(e.target.value)}
-             className="w-full h-64 p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none font-mono text-sm resize-none shadow-inner"
-             placeholder="Paste content here to evaluate..."
-           />
-           <div className="flex gap-4">
-              <button 
-                onClick={handleCheck}
-                disabled={loading || !content.trim()}
-                className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg shadow transition-colors flex items-center justify-center min-w-[120px] disabled:opacity-50"
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Evaluate Content'}
-              </button>
-           </div>
-        </div>
+      <div className="grid md:grid-cols-[1fr_300px] gap-8 items-start">
+        <TiltCard className="h-full">
+          <div className="space-y-4 bg-[#161930]/80 backdrop-blur-md p-6 rounded-xl border border-[#2a2e4a] shadow-xl h-full flex flex-col">
+             <textarea 
+               value={content}
+               onChange={(e) => setContent(e.target.value)}
+               className="w-full flex-1 min-h-[250px] p-4 bg-[#0a0b14] text-[#00ff88] border border-[#2a2e4a] rounded-lg focus:ring-2 focus:ring-[#00ff88] focus:border-[#00ff88] outline-none font-mono text-sm resize-none shadow-inner transition-all placeholder-[#00ff88]/30"
+               placeholder="Paste content here to evaluate..."
+             />
+             <div className="flex gap-4">
+                <button 
+                  onClick={handleCheck}
+                  disabled={loading || !content.trim()}
+                  className="w-full py-3 bg-[#00ff88] hover:bg-[#00cc6a] text-[#050511] font-bold rounded-lg shadow-[0_0_15px_rgba(0,255,136,0.4)] transition-all flex items-center justify-center disabled:opacity-50 disabled:shadow-none hover:scale-[1.02]"
+                >
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Evaluate Content'}
+                </button>
+             </div>
+          </div>
+        </TiltCard>
 
-        <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
-           <h3 className="font-semibold text-slate-700 mb-3 text-sm uppercase tracking-wider">Presets</h3>
-           <div className="space-y-2">
-             {PRESETS.map((p, i) => (
-               <button
-                 key={i}
-                 onClick={() => setContent(p.value)}
-                 className="w-full text-left px-3 py-2 text-sm bg-white hover:bg-brand-50 border border-slate-200 rounded transition-colors text-slate-700 font-medium"
-               >
-                 {p.label}
-               </button>
-             ))}
-           </div>
-        </div>
+        <TiltCard>
+          <div className="bg-[#161930]/80 backdrop-blur-md p-6 rounded-xl border border-[#2a2e4a] shadow-xl">
+             <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wider flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#00ff88] shadow-[0_0_8px_#00ff88]"></span> Presets</h3>
+             <div className="space-y-3">
+               {PRESETS.map((p, i) => (
+                 <button
+                   key={i}
+                   onClick={() => setContent(p.value)}
+                   className="w-full text-left px-4 py-3 text-sm bg-[#0a0b14] hover:bg-[#00ff88]/10 hover:border-[#00ff88]/50 border border-[#2a2e4a] rounded-lg transition-all text-slate-300 hover:text-white font-medium hover:shadow-[0_0_10px_rgba(0,255,136,0.2)] hover:-translate-y-0.5"
+                 >
+                   {p.label}
+                 </button>
+               ))}
+             </div>
+          </div>
+        </TiltCard>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 text-red-900 rounded-lg flex items-start gap-3 border border-red-200">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-semibold">Evaluation Failed</h4>
-            <p className="text-sm mt-1">{error}</p>
+        <TiltCard>
+          <div className="p-4 bg-red-900/30 text-red-200 rounded-xl flex items-start gap-3 border border-red-500/50 shadow-[0_0_15px_rgba(255,0,0,0.2)] backdrop-blur-sm">
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-400" />
+            <div>
+              <h4 className="font-bold text-red-300">Evaluation Failed</h4>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
           </div>
-        </div>
+        </TiltCard>
       )}
 
       {result && !loading && (
         <div className="mt-8 animate-in slide-in-from-bottom-4 duration-500">
-          <VerdictCard result={result} />
+          <TiltCard>
+            <VerdictCard result={result} />
+          </TiltCard>
         </div>
       )}
     </div>
