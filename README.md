@@ -50,7 +50,7 @@ python eval/run_eval.py
 ```
 This will populate `results/metrics.json` and `results/failure_cases.md`, which are immediately consumed and visualized by the frontend `EvalDashboard`.
 
-## Known Limitations
+## Known Limitation
 
 - **Subtle Semantic Injections:** The `subtle_semantic` category is the hardest to detect reliably. Injections framed as benign requests or diagnostic commands often bypass both the regex heuristics and the LLM judge.
 - **False Positives on Security Content:** The heuristic pass may flag legitimate content that discusses prompt injection techniques, roleplay rules, or security testing.
