@@ -42,29 +42,37 @@ class HeuristicDetector:
     def detect(self, content: str) -> DetectionVerdict:
         matched_categories = set()
         matched_patterns_strings = []
+        total_matches = 0
 
         for category, regex_list in self.patterns.items():
             for regex in regex_list:
-                if regex.search(content):
+                matches = regex.findall(content)
+                if matches:
                     matched_categories.add(category)
                     matched_patterns_strings.append(f"{category} ({regex.pattern})")
-                    break # One match per category is enough for scoring
+                    total_matches += len(matches)
 
         is_injection = len(matched_categories) > 0
+        content_length = len(content)
         
-        # Confidence scoring based on number of distinct matched categories
+        # Dynamic confidence scoring based on distinct categories, total matches, and length
         if len(matched_categories) == 0:
-            confidence = 0.0
-            reasoning = "No heuristic patterns matched."
-        elif len(matched_categories) == 1:
-            confidence = 0.6  # Moderately confident if only one type of pattern matched
-            reasoning = f"Matched 1 heuristic category: {', '.join(matched_categories)}."
-        elif len(matched_categories) == 2:
-            confidence = 0.85 # Highly confident if multiple different techniques are combined
-            reasoning = f"Matched 2 heuristic categories: {', '.join(matched_categories)}."
+            import string
+            punct_count = sum(1 for c in content if c in string.punctuation)
+            caps_count = sum(1 for c in content if c.isupper())
+            punct_density = punct_count / max(1, content_length)
+            caps_density = caps_count / max(1, content_length)
+            
+            # Yields a wide spread from ~0.02 to ~0.45 based on text structure
+            confidence = min(0.49, (punct_density * 2.0) + (caps_density * 0.8))
+            reasoning = "No heuristic patterns matched. Variance based on punctuation/caps density."
         else:
-            confidence = 0.99 # Almost certain
-            reasoning = f"Matched {len(matched_categories)} heuristic categories: {', '.join(matched_categories)}."
+            base_confidence = 0.5
+            cat_bonus = len(matched_categories) * 0.15
+            match_bonus = (total_matches - 1) * 0.05
+            
+            confidence = min(0.99, base_confidence + cat_bonus + match_bonus + (content_length / 5000.0))
+            reasoning = f"Matched {len(matched_categories)} heuristic categories with {total_matches} total matches."
 
         return DetectionVerdict(
             is_injection=is_injection,
